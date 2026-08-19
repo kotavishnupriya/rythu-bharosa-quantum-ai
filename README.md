@@ -1,7 +1,15 @@
 # 🌾 Rythu Bharosa – Real-Time Quantum AI Precision Agriculture Decision Support System
+## రైతు భరోసా – రియల్-టైమ్ క్వాంటం AI ఖచ్చితమైన వ్యవసాయ నిర్ణయ మద్దతు వ్యవస్థ
 
-> **రైతు భరోసా – Data-Driven Decisions for Better Farming**  
-> *"Helping Farmers and Rythu Bharosa Kendras (RBKs) Make Smarter Decisions Using Real-Time Data, Classical AI, and Quantum Machine Learning"*
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rythu-bharosa-quantum-ai-nnenrstukbf87trzghksse.streamlit.app)
+[![GitHub License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://python.org)
+[![Qiskit Version](https://img.shields.io/badge/Qiskit-1.1%2B-purple.svg)](https://qiskit.org)
+
+🌐 **Live Web Application:** 👉 **[https://rythu-bharosa-quantum-ai-nnenrstukbf87trzghksse.streamlit.app](https://rythu-bharosa-quantum-ai-nnenrstukbf87trzghksse.streamlit.app)**
+
+> **Motto (English):** *"Rythu Bharosa – Helping Farmers Make Better Decisions Using Real-Time Data and AI"*  
+> **Motto (తెలుగు):** *"రైతు భరోసా – మెరుగైన వ్యవసాయ నిర్ణయాల కోసం రియల్-టైమ్ డేటా & AI"*
 
 ---
 

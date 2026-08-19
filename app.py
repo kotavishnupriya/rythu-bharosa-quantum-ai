@@ -667,9 +667,9 @@ def main():
     with col1:
         st.markdown(f"""
         <div class="stat-card">
-            <div class="stat-title">🌾 Expected Yield (దిగుబడి)</div>
+            <div class="stat-title">🌾 Expected Yield Rate (ఎకరా/హెక్టారు దిగుబడి)</div>
             <div class="stat-value">{displayed_yield:.2f} <span style="font-size: 1rem; font-weight: normal;">t/ha</span></div>
-            <div class="stat-sub">Harvest: <b>{displayed_harvest:.2f} tonnes</b> ({area_ha} ha)</div>
+            <div class="stat-sub">🚜 Total Field Harvest: <b style="color: #1b5e20; font-size: 1rem;">{displayed_harvest:.2f} tonnes</b> ({area_ha:.1f} ha / {area_ha * 2.471:.1f} ac)</div>
         </div>
         """, unsafe_allow_html=True)
 

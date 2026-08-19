@@ -702,7 +702,7 @@ def main():
     advisories, risks = evaluate_agronomic_advisory(
         selected_crop, area_ha, class_pred_yield, crop_hist_mean,
         weather["temperature"], weather["humidity"], weather["precipitation"],
-        n_ref, p_ref, k_ref, ph_ref
+        n_input, p_input, k_input, ph_input
     )
 
     # ==========================================================================
@@ -960,7 +960,7 @@ def main():
 
         st.markdown("---")
         st.subheader("⚡ Live 4-Qubit Statevector Quantum Measurement Simulator")
-        st.caption("Real-time quantum statevector $|\psi(x)\\rangle$ projection across all $2^4 = 16$ computational basis states for the farmer's current input:")
+        st.caption(r"Real-time quantum statevector $|\psi(x)\rangle$ projection across all $2^4 = 16$ computational basis states for the farmer's current input:")
 
         basis_labels = [f"|{bin(i)[2:].zfill(4)}⟩" for i in range(16)]
         fig_q_bars = px.bar(

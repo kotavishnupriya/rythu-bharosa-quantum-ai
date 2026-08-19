@@ -551,46 +551,110 @@ def main():
             st.metric("Area in Acres", f"{area_ha * 2.471:.2f} acres")
 
         st.markdown("---")
-        st.subheader("🧪 Input Application (Optional)")
-        with st.expander("Fertilizer & Pesticide Inputs", expanded=False):
-            crop_median_fert = df_combined[df_combined["crop"] == selected_crop]["fertilizer"].median() / max(1.0, df_combined[df_combined["crop"] == selected_crop]["area"].median())
-            crop_median_pest = df_combined[df_combined["crop"] == selected_crop]["pesticide"].median() / max(1.0, df_combined[df_combined["crop"] == selected_crop]["area"].median())
-            
-            if pd.isna(crop_median_fert) or crop_median_fert <= 0:
-                crop_median_fert = 120.0
-            if pd.isna(crop_median_pest) or crop_median_pest <= 0:
-                crop_median_pest = 1.5
+        st.subheader("🧪 నేల పరీక్ష వివరాలు / Soil Nutrient Test (SHC)")
+        st.caption("Enter laboratory Soil Health Card values or use state benchmarks:")
 
-            fert_input = st.number_input(
-                "Total Fertilizer Applied (kg):",
-                min_value=0.0,
-                max_value=50000.0,
-                value=float(round(crop_median_fert * area_ha, 1))
+        # Lookup state default benchmarks
+        df_soil = datasets["soil"]
+        if df_soil is not None and selected_state in df_soil["state"].values:
+            soil_row = df_soil[df_soil["state"] == selected_state].iloc[0]
+            default_n, default_p, default_k, default_ph = float(soil_row["N"]), float(soil_row["P"]), float(soil_row["K"]), float(soil_row["pH"])
+        else:
+            default_n, default_p, default_k, default_ph = 210.5, 24.2, 280.4, 7.2
+
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            n_input = st.number_input(
+                "Available Nitrogen (N kg/ha):",
+                min_value=10.0,
+                max_value=600.0,
+                value=default_n,
+                step=5.0,
+                help="Available Nitrogen in kg per hectare from Soil Health Card."
             )
-            pest_input = st.number_input(
-                "Total Pesticide Applied (kg):",
-                min_value=0.0,
-                max_value=500.0,
-                value=float(round(crop_median_pest * area_ha, 2))
+            p_input = st.number_input(
+                "Available Phosphorus (P kg/ha):",
+                min_value=2.0,
+                max_value=150.0,
+                value=default_p,
+                step=1.0,
+                help="Available Phosphorus in kg per hectare."
+            )
+        with col_n2:
+            k_input = st.number_input(
+                "Available Potassium (K kg/ha):",
+                min_value=10.0,
+                max_value=800.0,
+                value=default_k,
+                step=5.0,
+                help="Available Potassium in kg per hectare."
+            )
+            ph_input = st.number_input(
+                "Soil Reaction (pH):",
+                min_value=3.5,
+                max_value=10.0,
+                value=default_ph,
+                step=0.1,
+                help="Soil pH (6.5 - 7.5 is neutral)."
             )
 
         st.markdown("---")
-        run_prediction = st.button("⚡ Run AI & Quantum Prediction", type="primary", use_container_width=True)
+        st.subheader("💊 ఎరువులు & మందులు / Field Chemical Inputs")
+        
+        crop_median_fert = df_combined[df_combined["crop"] == selected_crop]["fertilizer"].median() / max(1.0, df_combined[df_combined["crop"] == selected_crop]["area"].median())
+        crop_median_pest = df_combined[df_combined["crop"] == selected_crop]["pesticide"].median() / max(1.0, df_combined[df_combined["crop"] == selected_crop]["area"].median())
+        
+        if pd.isna(crop_median_fert) or crop_median_fert <= 0:
+            crop_median_fert = 120.0
+        if pd.isna(crop_median_pest) or crop_median_pest <= 0:
+            crop_median_pest = 1.5
+
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            fert_input = st.number_input(
+                "Fertilizer (Total kg):",
+                min_value=0.0,
+                max_value=50000.0,
+                value=float(round(crop_median_fert * area_ha, 1)),
+                help="Total commercial fertilizer (Urea, DAP, MOP, Complex) applied across the field."
+            )
+        with col_f2:
+            pest_input = st.number_input(
+                "Pesticide (Total kg):",
+                min_value=0.0,
+                max_value=500.0,
+                value=float(round(crop_median_pest * area_ha, 2)),
+                help="Total formulated pesticide applied."
+            )
+
+        st.markdown("---")
+        run_prediction = st.button("⚡ Recalculate AI & Quantum Prediction", type="primary", use_container_width=True)
 
     # ==========================================================================
     # FETCH REAL-TIME WEATHER
     # ==========================================================================
     weather = fetch_live_weather(lat, lon)
 
-    df_soil = datasets["soil"]
-    if df_soil is not None and selected_state in df_soil["state"].values:
-        soil_row = df_soil[df_soil["state"] == selected_state].iloc[0]
-        n_ref, p_ref, k_ref, ph_ref = float(soil_row["N"]), float(soil_row["P"]), float(soil_row["K"]), float(soil_row["pH"])
+    # Dynamic Localized Regional Benchmark
+    state_season_data = df_combined[
+        (df_combined["crop"] == selected_crop) & 
+        (df_combined["state"] == selected_state) & 
+        (df_combined["season"] == selected_season)
+    ]
+    if not state_season_data.empty and len(state_season_data) >= 2:
+        crop_hist_mean = float(state_season_data["yield"].median())
+        benchmark_label = f"{selected_state} ({selected_season}) Median"
     else:
-        n_ref, p_ref, k_ref, ph_ref = 210.5, 24.2, 280.4, 7.2
-
-    crop_hist_data = df_combined[df_combined["crop"] == selected_crop]
-    crop_hist_mean = float(crop_hist_data["yield"].median()) if not crop_hist_data.empty else 2.5
+        state_data = df_combined[
+            (df_combined["crop"] == selected_crop) & 
+            (df_combined["state"] == selected_state)
+        ]
+        if not state_data.empty:
+            crop_hist_mean = float(state_data["yield"].median())
+            benchmark_label = f"{selected_state} Historical Median"
+        else:
+            crop_hist_mean = float(df_combined[df_combined["crop"] == selected_crop]["yield"].median())
+            benchmark_label = "National Benchmark Median"
 
     # ==========================================================================
     # PERFORM MODEL INFERENCE (CLASSICAL + QUANTUM)
@@ -602,10 +666,10 @@ def main():
         "area": [area_ha],
         "fertilizer": [fert_input],
         "pesticide": [pest_input],
-        "N": [n_ref],
-        "P": [p_ref],
-        "K": [k_ref],
-        "pH": [ph_ref],
+        "N": [n_input],
+        "P": [p_input],
+        "K": [k_input],
+        "pH": [ph_input],
         "avg_temp_c": [weather["temperature"]],
         "total_rainfall_mm": [max(50.0, weather["precipitation"] * 30.0 + 950.0)],
         "avg_humidity_percent": [weather["humidity"]]
@@ -795,7 +859,7 @@ def main():
                 mode="gauge+number+delta",
                 value=class_pred_yield,
                 domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': f"Expected Yield vs State Median (t/ha)", 'font': {'size': 14}},
+                title={'text': f"Expected Yield vs {benchmark_label} (t/ha)", 'font': {'size': 14}},
                 delta={'reference': crop_hist_mean, 'increasing': {'color': "#2e7d32"}, 'decreasing': {'color': "#d32f2f"}},
                 gauge={
                     'axis': {'range': [0, max(crop_hist_mean * 2.2, class_pred_yield * 1.4)]},
@@ -841,21 +905,21 @@ def main():
             """, unsafe_allow_html=True)
 
         st.markdown("---")
-        st.subheader("🧪 Soil Nutrient Reference Profile (రాష్ట్ర స్థాయి రిఫరెన్స్ డేటా)")
+        st.subheader("🧪 Soil Nutrient Test Profile (మట్టి పరీక్ష & పోషకాలు)")
         st.markdown("""
         > [!IMPORTANT]
-        > **State-Level Reference Only:** The soil nutrient values displayed below represent state agro-climatic benchmarks. Individual agricultural plots exhibit localized micro-variations. **Never apply chemical fertilizer quantities without a certified laboratory Soil Health Card (SHC) test.**
+        > **Soil Nutrient Comparison:** The values below reflect your entered field soil test parameters compared against the state agro-climatic baseline.
         """)
 
         col_s1, col_s2, col_s3, col_s4 = st.columns(4)
         with col_s1:
-            st.metric("Available Nitrogen (N)", f"{n_ref:.1f} kg/ha", help="State-level baseline reference")
+            st.metric("Available Nitrogen (N)", f"{n_input:.1f} kg/ha", delta=f"{n_input - default_n:+.1f} vs State Base", help="Farmer test value vs state benchmark")
         with col_s2:
-            st.metric("Available Phosphorus (P)", f"{p_ref:.1f} kg/ha", help="State-level baseline reference")
+            st.metric("Available Phosphorus (P)", f"{p_input:.1f} kg/ha", delta=f"{p_input - default_p:+.1f} vs State Base", help="Farmer test value vs state benchmark")
         with col_s3:
-            st.metric("Available Potassium (K)", f"{k_ref:.1f} kg/ha", help="State-level baseline reference")
+            st.metric("Available Potassium (K)", f"{k_input:.1f} kg/ha", delta=f"{k_input - default_k:+.1f} vs State Base", help="Farmer test value vs state benchmark")
         with col_s4:
-            st.metric("Soil Reaction (pH)", f"{ph_ref:.1f}", help="State-level baseline reference")
+            st.metric("Soil Reaction (pH)", f"{ph_input:.1f}", delta=f"{ph_input - default_ph:+.1f} vs State Base", help="Soil pH")
 
     # --------------------------------------------------------------------------
     # TAB 3: QUANTUM AI MECHANICS & BENCHMARK COMPARISON
@@ -1075,15 +1139,15 @@ Atmospheric Condition:     {weather['condition']}
 Classical AI Expected Yield:  {class_pred_yield:.2f} tonnes / hectare
 Total Estimated Output:        {total_class_production:.2f} tonnes
 Quantum AI Expected Yield:    {quant_pred_yield:.2f} tonnes / hectare
-Historical Regional Average:  {crop_hist_mean:.2f} tonnes / hectare
+Historical Regional Average:  {crop_hist_mean:.2f} tonnes / hectare ({benchmark_label})
 
 --------------------------------------------------------------------------------
-4. SOIL REFERENCE BENCHMARKS (రాష్ట్ర స్థాయి మట్టి రిఫరెన్స్)
+4. FIELD SOIL TEST & NUTRIENT PROFILE (మట్టి పరీక్ష & పోషకాలు)
 --------------------------------------------------------------------------------
-Available Nitrogen (N):    {n_ref:.1f} kg/ha (State Benchmark)
-Available Phosphorus (P):  {p_ref:.1f} kg/ha (State Benchmark)
-Available Potassium (K):   {k_ref:.1f} kg/ha (State Benchmark)
-Soil Reaction (pH):        {ph_ref:.1f} (State Benchmark)
+Available Nitrogen (N):    {n_input:.1f} kg/ha (State Baseline: {default_n:.1f} kg/ha)
+Available Phosphorus (P):  {p_input:.1f} kg/ha (State Baseline: {default_p:.1f} kg/ha)
+Available Potassium (K):   {k_input:.1f} kg/ha (State Baseline: {default_k:.1f} kg/ha)
+Soil Reaction (pH):        {ph_input:.1f} (State Baseline: {default_ph:.1f})
 
 --------------------------------------------------------------------------------
 5. AGRONOMIC RISKS & RECOMMENDATIONS (వ్యవసాయ సలహాలు)

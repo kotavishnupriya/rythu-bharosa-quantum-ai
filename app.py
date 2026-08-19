@@ -664,39 +664,60 @@ def main():
     displayed_yield = class_pred_yield if "Classical" in model_engine or "Dual" in model_engine else quant_pred_yield
     displayed_harvest = total_class_production if "Classical" in model_engine or "Dual" in model_engine else total_quant_production
 
+    # Convert units for farmer convenience
+    quintals_total = displayed_harvest * 10.0
+    paddy_bags_75kg = (displayed_harvest * 1000.0) / 75.0
+    tonnes_per_acre = displayed_yield / 2.471
+    quintals_per_acre = tonnes_per_acre * 10.0
+
     with col1:
         st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-title">🌾 Expected Yield Rate (ఎకరా/హెక్టారు దిగుబడి)</div>
-            <div class="stat-value">{displayed_yield:.2f} <span style="font-size: 1rem; font-weight: normal;">t/ha</span></div>
-            <div class="stat-sub">🚜 Total Field Harvest: <b style="color: #1b5e20; font-size: 1rem;">{displayed_harvest:.2f} tonnes</b> ({area_ha:.1f} ha / {area_ha * 2.471:.1f} ac)</div>
+        <div class="stat-card" style="border-top: 4px solid #1b5e20;">
+            <div class="stat-title">🌾 Total Field Harvest (మొత్తం దిగుబడి)</div>
+            <div class="stat-value">{displayed_harvest:.2f} <span style="font-size: 1.1rem; font-weight: 600;">Tonnes</span></div>
+            <div class="stat-sub">
+                <b>{quintals_total:.1f} Quintals</b> • <b>{paddy_bags_75kg:.0f} Bags (75kg)</b><br>
+                Across {area_ha:.1f} Hectares ({area_ha * 2.471:.1f} Acres)
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
+        diff_pct = ((displayed_yield / max(0.01, crop_hist_mean)) - 1.0) * 100.0
+        diff_color = "#2e7d32" if diff_pct >= 0 else "#c62828"
+        diff_sign = "+" if diff_pct >= 0 else ""
         st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-title">🌡️ Real-Time Temp (ఉష్ణోగ్రత)</div>
-            <div class="stat-value">{weather['temperature']} <span style="font-size: 1rem; font-weight: normal;">°C</span></div>
-            <div class="stat-sub">{weather['condition']}</div>
+        <div class="stat-card" style="border-top: 4px solid #2e7d32;">
+            <div class="stat-title">📈 Productivity Rate (ఎకరా దిగుబడి)</div>
+            <div class="stat-value">{displayed_yield:.2f} <span style="font-size: 1rem; font-weight: 600;">t/ha</span></div>
+            <div class="stat-sub">
+                <b>{tonnes_per_acre:.2f} t/acre</b> ({quintals_per_acre:.1f} Quintals/acre)<br>
+                Benchmark: {crop_hist_mean:.2f} t/ha (<b style="color: {diff_color};">{diff_sign}{diff_pct:.0f}%</b>)
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
     with col3:
         st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-title">💧 Relative Humidity (తేమ)</div>
-            <div class="stat-value">{weather['humidity']} <span style="font-size: 1rem; font-weight: normal;">%</span></div>
-            <div class="stat-sub">Wind: <b>{weather['wind_speed']} km/h</b></div>
+        <div class="stat-card" style="border-top: 4px solid #0288d1;">
+            <div class="stat-title">🌡️ Live Climate (వాతావరణం)</div>
+            <div class="stat-value">{weather['temperature']} <span style="font-size: 1rem; font-weight: 600;">°C</span></div>
+            <div class="stat-sub">
+                💧 Humidity: <b>{weather['humidity']}%</b> • 🌧️ Rain: <b>{weather['precipitation']} mm</b><br>
+                {weather['condition']}
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
     with col4:
         st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-title">🌧️ Precipitation (వర్షపాతం)</div>
-            <div class="stat-value">{weather['precipitation']} <span style="font-size: 1rem; font-weight: normal;">mm</span></div>
-            <div class="stat-sub">Updated: {weather['timestamp']}</div>
+        <div class="stat-card" style="border-top: 4px solid #f57f17;">
+            <div class="stat-title">🌱 Selected Crop & Region (పంట)</div>
+            <div class="stat-value" style="font-size: 1.5rem; color: #e65100;">{selected_crop}</div>
+            <div class="stat-sub">
+                Season: <b>{selected_season}</b> • State: <b>{selected_state}</b><br>
+                Location: <b>{loc_name}</b>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 

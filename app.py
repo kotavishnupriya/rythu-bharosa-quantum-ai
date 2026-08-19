@@ -635,7 +635,8 @@ def main():
     # ==========================================================================
     weather = fetch_live_weather(lat, lon)
 
-    # Dynamic Localized Regional Benchmark
+    # Dynamic Localized Regional Benchmark & Historical Data
+    crop_hist_data = df_combined[df_combined["crop"] == selected_crop]
     state_season_data = df_combined[
         (df_combined["crop"] == selected_crop) & 
         (df_combined["state"] == selected_state) & 

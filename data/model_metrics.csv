@@ -1,0 +1,3 @@
+model,MAE,RMSE,R2,Samples,Training Time (s)
+Classical AI (Random Forest Regressor),8.0012,127.644,0.9755,3916,1.44
+Quantum AI (ZZFeatureMap + SVR),113.6199,1130.845,-0.0085,300,0.34
